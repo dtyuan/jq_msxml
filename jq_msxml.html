@@ -1,0 +1,352 @@
+<html>
+<title>MuseScore Add/Remove Lyrics v 1.0</title>
+<head>
+<meta charset="utf-8"/>
+<script language="JavaScript" type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
+<script>
+  function msAddStanza(id)
+  {
+    var xml = $('#'+id).val();
+
+    var jqobj = $("<div>" + xml + "</div>");
+    jqobj.find('note').each(function(index, obj){
+      var newobj = $(obj).find('lyric').last().clone();
+      newobj.attr('number', parseInt(newobj.attr('number')) + 1);
+      newobj.appendTo($(obj)).before('  ').after('\n      ');
+      return true;
+    });
+
+    $('#result').val(jqobj.html());
+  }
+  function msCopyResult(id)
+  {
+    var result = $('#result').val();
+
+    $('#'+id).val(result);
+  }
+  function msStanza(id)
+  {
+    /*
+      [3m-2: move stanza 3 up 2 lines]
+      [2m+3: move stanza 2 down 3 lines]
+      [2c+3: copy stanza 2 and append after 3rd line]
+      [2c-5: copy stanza 2 and insert before 5th line]
+      [2c*3: duplicate stanza 2 for 3 times]
+      [3s6: swap stanza 3 and 6]
+      [4d: delete stanza 4]
+      [4d*3: delete stanza 4 for 3 times]
+    */
+
+    var xml = $('#'+id).val();
+
+    var mode = $('#ms_1').val();
+    if(mode==null || mode==""){return;}
+
+
+    if(mode.match(/m/))
+    {
+      var stanzas = mode.split('m');
+      var vnum = parseInt(stanzas[0]);
+      var oper = parseInt(stanzas[1]);
+      if(isNaN(vnum) || isNaN(oper)){alert("input invalid"); return;}
+      var sign = stanzas[1].substring(0,1);
+      var opn = parseInt(stanzas[1].substring(1));
+      if( (sign != '+' && sign != '-') || isNaN(opn)){alert("input invalid"); return;}
+
+      var jqobj = $("<div>" + xml + "</div>");
+      // re-number the lyrics
+      var jqobj = $("<div>" + xml + "</div>");
+      jqobj.find('note').each(function(index, obj){
+        $(obj).find('lyric').each(function(lind, lobj){
+          $(lobj).attr('number', (lind + 1));
+
+          return true;
+        });
+
+        return true;
+      });
+      jqobj.find('note').each(function(index, obj){
+        var sobj = $(obj).find('lyric').eq(vnum -1);
+        var newind = vnum + oper -1;
+        if(newind < 0)
+        {
+          newind = 0;
+        } else
+        if(newind > $(obj).find('lyric').size()-1)
+        {
+          newind = $(obj).find('lyric').size()-1;
+        }
+        var iobj = $(obj).find('lyric').eq(newind);
+
+        if(sign == '-')
+        {
+          sobj.insertBefore(iobj).before('').after('\n        ');
+        }
+        else
+        {
+          sobj.insertAfter(iobj).after('  ').before('\n        ');
+        }
+
+        return true;
+      });
+    } else
+    if(mode.match(/c/))
+    {
+      var stanzas = mode.split('c');
+      var vnum = parseInt(stanzas[0]);
+      var oper = parseInt(stanzas[1]);
+      if(isNaN(vnum)){alert("input invalid"); return;}
+      var sign = stanzas[1].substring(0,1);
+      var opn = parseInt(stanzas[1].substring(1));
+      if( (sign != '+' && sign != '-' && sign != '*') || isNaN(opn)){alert("input invalid"); return;}
+
+      var jqobj = $("<div>" + xml + "</div>");
+      jqobj.find('note').each(function(index, obj){
+        $(obj).find('lyric').each(function(lind, lobj){
+          $(lobj).attr('number', (lind + 1));
+
+          return true;
+        });
+
+        return true;
+      });
+      jqobj.find('note').each(function(index, obj){
+        var sobj = $(obj).find('lyric').eq(vnum -1);
+        var newind = opn -1;
+        if(newind < 0)
+        {
+          newind = 0;
+        } else
+        if(newind > $(obj).find('lyric').size()-1)
+        {
+          newind = $(obj).find('lyric').size()-1;
+        }
+        var iobj = $(obj).find('lyric').eq(newind);
+
+        if(sign == '-')
+        {
+          sobj.clone().insertBefore(iobj).before('').after('\n        ');
+        } else
+        if(sign == '+')
+        {
+          sobj.clone().insertAfter(iobj).after('  ').before('\n        ');
+        } else
+        if(sign == '*')
+        {
+          for(var i=0;i<opn; i++)
+          {
+            sobj.clone().insertAfter(sobj).after('  ').before('\n        ');
+          }
+        }
+
+        return true;
+      });
+    } else
+    if(mode.match(/s/))
+    {
+      var stanzas = mode.split('s');
+      var vnum = parseInt(stanzas[0]);
+      var oper = parseInt(stanzas[1]);
+      if(isNaN(vnum) || isNaN(oper)){alert("input invalid"); return;}
+
+      var jqobj = $("<div>" + xml + "</div>");
+      jqobj.find('note').each(function(index, obj){
+        $(obj).find('lyric').each(function(lind, lobj){
+          $(lobj).attr('number', (lind + 1));
+
+          return true;
+        });
+
+        return true;
+      });
+      jqobj.find('note').each(function(index, obj){
+        var sobj = $(obj).find('lyric').eq(vnum -1);
+        var newind = oper -1;
+        if(newind < 0)
+        {
+          newind = 0;
+        } else
+        if(newind > $(obj).find('lyric').size()-1)
+        {
+          newind = $(obj).find('lyric').size()-1;
+        }
+        var iobj = $(obj).find('lyric').eq(newind);
+
+        if(vnum < newind)
+        {
+          sobj.clone().insertBefore(iobj).before('').after('\n        ');
+          iobj.clone().insertAfter(sobj).after('  ').before('\n        ');
+        }
+        else
+        {
+          iobj.clone().insertBefore(sobj).before('').after('\n        ');
+          sobj.clone().insertAfter(iobj).after('  ').before('\n        ');
+        }
+        sobj.remove();
+        iobj.remove();
+
+        return true;
+      });
+    } else
+    if(mode.match(/d/))
+    {
+      var stanzas = mode.split('d');
+      var vnum = parseInt(stanzas[0]);
+      var oper = stanzas[1];
+      if(isNaN(vnum)){alert("input invalid"); return;}
+      var sign;
+      var opn;
+      if(!(oper==null || oper == ""))
+      {
+        sign = stanzas[1].substring(0,1);
+        opn = parseInt(stanzas[1].substring(1));
+        if( (sign != '+' && sign != '-' && sign != '*') || isNaN(opn)){alert("input invalid"); return;}
+      }
+
+      var jqobj = $("<div>" + xml + "</div>");
+      jqobj.find('note').each(function(index, obj){
+        $(obj).find('lyric').each(function(lind, lobj){
+          $(lobj).attr('number', (lind + 1));
+
+          return true;
+        });
+
+        return true;
+      });
+      jqobj.find('note').each(function(index, obj){
+        var sobj = $(obj).find('lyric').eq(vnum -1);
+
+        if(sign == '*')
+        {
+          for(var i=0;i<opn; i++)
+          {
+            $(obj).find('lyric').eq(vnum -1).remove();
+          }
+        }
+        else
+        {
+          sobj.remove();
+        }
+
+        return true;
+      });
+    }
+
+    // re-number the lyrics
+    jqobj.find('note').each(function(index, obj){
+      $(obj).find('lyric').each(function(lind, lobj){
+        $(lobj).attr('number', (lind + 1));
+
+        return true;
+      });
+
+      return true;
+    });
+
+    $('#result').val(jqobj.html());
+
+  }
+</script>
+<script>
+  $(document).ready(function(){
+    // Content section used alot
+    var content = document.getElementById('content');
+    
+    if (!window.FileReader) {
+      //content.innerHTML = "<p>Please copy music xml file into input text area.</p>";
+    } 
+    else {
+      // Page Layout
+      content.innerHTML = ''
+        + '<p>Pick a Music XML file or drag one into the box below <br> '
+        + '<input type="file" id="file" name="file"/></p>'
+      ;
+    
+      // Input handler
+      document.getElementById('file').onchange = function() {
+        readFileAsText(this.files[0]);
+      };
+    
+      // Drag and drop methods
+      content.ondragover = function(e) {
+        e.preventDefault();
+        return false;
+      };
+      content.ondrop = function(event) {
+        event.stopPropagation();
+        readFileAsText(event.dataTransfer.files[0]);
+        return false;
+      };
+        
+      function readFileAsText(file) {
+        var reader = new FileReader();
+        reader.readAsText(file);
+        reader.onload = function(event) {
+          document.getElementById('t1').textContent =
+            event.target.result;
+        };
+        reader.onerror = function() {
+          document.getElementById('file-content').innerHTML = 'Unable to read ' + file.fileName;
+        };
+      }
+    }
+  });
+</script>
+</head>
+<body>
+<h2>
+  Simple Javascript tool for duplicating/deleting lyrics in Music XMLs exported from MuseScore.
+</h2>
+<h3>
+  The result can be imported back to MuseScore for further editing.
+</h3>
+
+<div id="content"></div>
+
+<hr>
+1. <input type="button" id="b_ms_1" value="MS add lyric" onclick="
+  msAddStanza('t1');
+"/> Duplicate the last lyric
+<hr>
+2. <input type="button" id="b_ms_3" value="MS manipulate lyrics" onclick="
+  msStanza('t1');
+"/>
+<input type="text" id="ms_1" value="" onclick=""/>
+<hr> Edit modes: 
+[3m-2: move lyric 3 up 2 lines]
+[2m+3: move lyric 2 down 3 lines]
+[2c+3: copy lyric 2 and append after 3rd line]
+[2c-5: copy lyric 2 and insert before 5th line]
+[2c*3: duplicate lyric 2 for 3 times]
+[3s6: swap lyric 3 and 6]
+[4d: delete lyric 4]
+[4d*3: delete lyric 4 for 3 times]
+<hr>
+Input:
+<input type="button" id="b_ms_2" value="Copy from result" onclick="
+  msCopyResult('t1');
+"/>
+
+<br>
+<textarea id="t1" cols="150" rows="30" placeholder="Paste Music XML here">
+</textarea>
+<br>
+Result:
+<br>
+<textarea id="result" cols="150" rows="30" placeholder="Copy the result back to Music XML file and import into MS">
+</textarea>
+
+<hr>
+<h3 style="color: red;">
+  <p>Assume each note has the same number of lyrics, i.e., if any note has a skip of lyric, please insert a blank space as its lyric.  Or the manipulation would fail or would require manual fix after imported back to MS.  So it is always helpful to create backup files before manipulation.
+  </p>
+  <p>
+  Tested with simple compositions only (intented for my own short scores), try on your own risks with complicated files.
+  </p>
+  <p>
+  Tested with Firefox 15.0.1 on Mac.
+  </p>
+</h3>
+
+</body>
+</html>
