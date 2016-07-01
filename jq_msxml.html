@@ -7,10 +7,53 @@
   function msAddStanza(id)
   {
     var xml = $('#'+id).val();
+    if(!xml || xml === '')
+    {
+      alert('No xml found!!!  Please choose an xml file.');
+      return;
+    }
 
     var jqobj = $("<div>" + xml + "</div>");
     jqobj.find('note').each(function(index, obj){
       var newobj = $(obj).find('lyric').last().clone();
+      newobj.attr('number', parseInt(newobj.attr('number')) + 1);
+      newobj.appendTo($(obj)).before('  ').after('\n      ');
+      return true;
+    });
+
+    $('#result').val(jqobj.html());
+  }
+  function msAddNewStanza(id)
+  {
+    var xml = $('#'+id).val();
+    if(!xml || xml === '')
+    {
+      alert('No xml found!!!  Please choose an xml file.');
+      return;
+    }
+    var newLyric = $.trim($('#new-lyric').val());
+    if(!newLyric || newLyric === '')
+    {
+      alert('No new lyric found!!!');
+      return;
+    }
+    newLyric = newLyric.replace(/\r\n|\n|\r/gm, '');
+
+    $('#last-lyric').val('');
+    $('#gen-lyric').val('');
+
+    var jqobj = $("<div>" + xml + "</div>");
+    jqobj.find('note').each(function(index, obj){
+      var newobj = $(obj).find('lyric').last().clone();
+      var currentText = newobj.find('text').text();
+      var charNum = currentText.length;
+      var newText = newLyric.substring(0, charNum);
+      newLyric = newLyric.substring(charNum);
+
+      newobj.find('text').text(newText);
+      $('#last-lyric').val($('#last-lyric').val() + currentText);
+      $('#gen-lyric').val($('#gen-lyric').val() + newText);
+
       newobj.attr('number', parseInt(newobj.attr('number')) + 1);
       newobj.appendTo($(obj)).before('  ').after('\n      ');
       return true;
@@ -295,7 +338,7 @@
 </head>
 <body>
 <h2>
-  Simple Javascript tool for duplicating/deleting lyrics in Music XMLs exported from MuseScore.
+  Simple Javascript jQuery tool for adding/duplicating/deleting lyrics in Music XMLs exported from MuseScore.
 </h2>
 <h3>
   The result can be imported back to MuseScore for further editing.
@@ -308,7 +351,26 @@
   msAddStanza('t1');
 "/> Duplicate the last lyric
 <hr>
-2. <input type="button" id="b_ms_3" value="MS manipulate lyrics" onclick="
+2. <input type="button" id="b_ms_4" value="MS add new lyric" onclick="
+  msAddNewStanza('t1');
+"/> Append new lyric as the last
+<div style="color: blue;">Please click "Copy from result" if you need to append another lyric after previous is done.</div>
+<br>
+New lyric
+<br>
+<textarea id="new-lyric" cols="150" rows="10" placeholder="Enter new lyric here">
+</textarea>
+<br>
+Last lyric (as a good reference to construct new lyrics: show spaces, hyphens, etc)
+<br>
+<textarea id="last-lyric" cols="150" rows="10" readonly placeholder="Last lyric here">
+</textarea>
+Added lyric
+<br>
+<textarea id="gen-lyric" cols="150" rows="10" readonly placeholder="Added lyric here">
+</textarea>
+<hr>
+3. <input type="button" id="b_ms_3" value="MS manipulate lyrics" onclick="
   msStanza('t1');
 "/>
 <input type="text" id="ms_1" value="" onclick=""/>
